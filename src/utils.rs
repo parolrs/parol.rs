@@ -91,7 +91,7 @@ pub fn init_view() -> TreeView {
         treeview.append_column(&column);
     }
 
-    treeview.set_grid_lines(TreeViewGridLines::Vertical);
+    treeview.set_grid_lines(TreeViewGridLines::Both);
     treeview.set_fixed_height_mode(true);
 
     treeview
