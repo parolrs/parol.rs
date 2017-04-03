@@ -103,7 +103,6 @@ fn main() {
     btn_new.connect_clicked(move |_| {
         insert_row(&model, ["parol.rs is", "the", "best", "password manager !"]);
 
-
         /* Btn */
         _btn_new.set_sensitive(false);
         _btn_load.set_sensitive(false);
@@ -239,6 +238,65 @@ fn main() {
         let message = message_box(&w, MessageType::Info, ButtonsType::Ok, "A strong password manager in coded in Rust with libsodium ❤️.");
         message.run();
         message.destroy();
+    });
+
+    let model = listmodel.clone();
+    treeview.connect_button_press_event(move |tree, event| {
+        // Right click
+        if event.get_button() == 3 {
+             /*
+                Add row
+            */
+
+            let add_row       = MenuItem::new();
+            let add_row_hbox  = Box::new(Orientation::Horizontal, 0);
+            let add_row_label = Label::new("Add row");
+            let add_row_image = Image::new_from_pixbuf(Some(&bytes_to_pixbuf(include_bytes!("../ressources/add_row.png"))));
+
+            add_row_hbox.add(&add_row_image);
+            add_row_hbox.add(&add_row_label);
+
+            add_row.add(&add_row_hbox);
+
+            /*
+                Remove row
+            */
+
+            let remove_row       = MenuItem::new();
+            let remove_row_hbox  = Box::new(Orientation::Horizontal, 0);
+            let remove_row_label = Label::new("Remove row");
+            let remove_row_image = Image::new_from_pixbuf(Some(&bytes_to_pixbuf(include_bytes!("../ressources/remove_row.png"))));
+
+            remove_row_hbox.add(&remove_row_image);
+            remove_row_hbox.add(&remove_row_label);
+
+            remove_row.add(&remove_row_hbox);
+
+            /*
+                Events
+            */
+            let model = model.clone();
+            add_row.connect_activate(move |_| {
+                insert_row(&model, ["", "", "", ""]);
+            });
+
+            remove_row.connect_activate(|_| {
+                println!("");
+            });
+
+            /*
+                Menu
+            */
+
+            let menu = Menu::new();
+
+            menu.add(&add_row);
+            menu.add(&remove_row);
+
+            menu.show_all();
+            menu.popup_easy(event.get_button(), event.get_time());
+        }
+        Inhibit(false)
     });
 
     window.connect_delete_event(|_, _| {

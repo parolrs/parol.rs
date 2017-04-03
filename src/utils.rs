@@ -20,7 +20,10 @@ pub use self::gtk::{
     TreeViewGridLines,
     ListStore,
     Entry,
-    TreePath
+    TreePath,
+    Menu,
+    MenuItem,
+    Label
 };
 pub use self::gdk_pixbuf::{
     Pixbuf, PixbufLoader
