@@ -1,3 +1,5 @@
+#![macro_use]
+
 pub extern crate gtk;
 pub extern crate gdk_pixbuf;
 pub extern crate parolrs;
@@ -23,11 +25,31 @@ pub use self::gtk::{
     TreePath,
     Menu,
     MenuItem,
-    Label
+    Label,
+    SelectionMode,
+    ScrolledWindow
 };
+
 pub use self::gdk_pixbuf::{
     Pixbuf, PixbufLoader
 };
+
+macro_rules! clone {
+    (@param _) =>
+        (_);
+    (@param $x:ident) =>
+        ($x);
+    ($($n:ident),+ => move || $body:expr) =>
+        ({
+            $(let $n = $n.clone();)+
+            move || $body
+        });
+    ($($n:ident),+ => move |$($p:tt),+| $body:expr)
+        => ({
+            $(let $n = $n.clone();)+
+            move |$(clone!(@param $p),)+| $body
+        });
+}
 
 pub fn message_box(window: &Window, message_type: MessageType, button: ButtonsType, message: &str) -> MessageDialog {
     MessageDialog::new(
@@ -37,6 +59,34 @@ pub fn message_box(window: &Window, message_type: MessageType, button: ButtonsTy
         button,
         message
     )
+}
+
+pub fn ask_password(window: &Window, message: &str) -> String {
+    let input_password = MessageDialog::new(
+        Some(window), DialogFlags::all(), MessageType::Question, ButtonsType::OkCancel, message
+    );
+
+    let entry = Entry::new();
+    input_password.get_content_area().pack_start(&entry, true, false, 0);
+
+    input_password.show_all();
+    input_password.set_size_request(200, 100);
+
+    if input_password.run() == -5 {
+        match entry.get_text() {
+            Some(password) => {
+                input_password.destroy();
+                return password
+            },
+            None => {
+                input_password.destroy();
+                panic!()
+            }
+        }
+    } else {
+        input_password.destroy();
+        panic!()
+    }
 }
 
 pub fn bytes_to_pixbuf(bytes: &[u8]) -> Pixbuf {
@@ -61,7 +111,7 @@ pub fn bytes_to_pixbuf(bytes: &[u8]) -> Pixbuf {
     }
 }
 
-pub fn init_view() -> TreeView {
+pub fn init_view(list_store: &ListStore) -> TreeView {
     let column_name = ["Program", "Username", "Password", "Note"];
     let treeview = TreeView::new();
 
@@ -69,9 +119,17 @@ pub fn init_view() -> TreeView {
         let column = TreeViewColumn::new();
         let cell   = CellRendererText::new();
         cell.set_alignment(0.5, 0.5);
+        cell.set_property_editable(true);
+        let list_store = list_store.clone();
+        cell.connect_edited(move |_, tree_path, new_text| {
+            match list_store.get_iter(&tree_path) {
+                Some(iter) => list_store.set_value(&iter, i, &new_text.to_value()),
+                None => {}
+            };
+        });
 
         column.pack_start(&cell, true);
-        column.set_title(column_name[i]);
+        column.set_title(column_name[i as usize]);
         column.add_attribute(&cell, "text", i as i32);
         column.set_min_width(match i {
             0 => 200,
@@ -93,6 +151,7 @@ pub fn init_view() -> TreeView {
 
     treeview.set_grid_lines(TreeViewGridLines::Both);
     treeview.set_fixed_height_mode(true);
+    treeview.get_selection().set_mode(SelectionMode::Multiple);
 
     treeview
 }
