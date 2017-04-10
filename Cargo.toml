@@ -1,5 +1,5 @@
 [package]
-name = "parol_gui"
+name = "parolrs_gui"
 version = "0.1.0"
 authors = ["Ogromny <ogromny@openmailbox.org>"]
 
