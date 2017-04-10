@@ -196,27 +196,12 @@ fn main() {
 
             remove_row.add(&remove_row_hbox);
 
-            //            let _model = model.clone();
-//            let _view  = view.clone();
-//            remove_row.connect_activate(move |_| {
-//                let iters = _view.get_selection().get_selected_rows();
-//                let b = _view.0.get_indices();
-//                println!("{:#?}", iters);
-//                // voir gtk...iter
-////                for iter in iters.1 {
-////                    _model.remove(iter);
-////                }
-////                for (_, i) in _view.get_selection().get_selected().unwrap() {
-////                    println!("{:?}", i);
-////                }
-//            });
-
             /* Event */
             remove_row.connect_activate(clone!(list_store, tree_view => move |_| {
-                let (paths, model) = tree_view.get_selection().get_selected_rows();
-                for i in 0 .. paths.len() {
-                    list_store.remove(&match list_store.get_iter(&paths[i]) {
-                        Some(iter) => { println!("{:?}", iter); iter},
+                let (paths, _) = tree_view.get_selection().get_selected_rows();
+                for path in paths.iter().rev() {
+                    list_store.remove(&match list_store.get_iter(&path) {
+                        Some(iter) => iter,
                         None => continue,
                     });
                 }
